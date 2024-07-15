@@ -17,6 +17,12 @@
 #include <memory.h>
 #include "sha256.h"
 
+#include <stdio.h>
+#include <string.h>
+
+#include <time.h>
+
+
 /****************************** MACROS ******************************/
 #define ROTLEFT(a,b) (((a) << (b)) | ((a) >> (32-(b))))
 #define ROTRIGHT(a,b) (((a) >> (b)) | ((a) << (32-(b))))
@@ -43,12 +49,30 @@ static const WORD k[64] = {
 /*********************** FUNCTION DEFINITIONS ***********************/
 void sha256_transform(SHA256_CTX *ctx, const BYTE data[])
 {
-	WORD a, b, c, d, e, f, g, h, i, j, t1, t2, m[64];
-
-	for (i = 0, j = 0; i < 16; ++i, j += 4)
+	WORD a, b, c, d, e, f, g, h, i, j, t1, t2, m[64], temp;
+	temp = 32;
+	
+	for (i = 0, j = 0; i < 16; ++i, j += 4){
 		m[i] = (data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | (data[j + 3]);
-	for ( ; i < 64; ++i)
+		//printf("m[%d] = %32X \n", i,m[i]);
+		//printf("k[%d] = %u \n", i,k[i]);
+		if (i == temp+1) {
+			printf("m[%d] = %32X \n", i,m[i]);
+			printf("k[%d] = %u \n", i,k[i]);
+			
+		}
+	}	
+	for ( ; i < 64; ++i) {
 		m[i] = SIG1(m[i - 2]) + m[i - 7] + SIG0(m[i - 15]) + m[i - 16];
+		//printf("m[%d] = %s \n", i,m[i]);
+		//printf("m[%d] = %32X \n", i,m[i]);
+		//printf("k[%d] = %u \n", i,k[i]);
+		//if (i == temp+1) {
+			//printf("m[%d] = %32X \n", i,m[i]);
+			//printf("k[%d] = %u \n", i,k[i]);
+			
+		//}
+	}	
 
 	a = ctx->state[0];
 	b = ctx->state[1];
@@ -70,6 +94,22 @@ void sha256_transform(SHA256_CTX *ctx, const BYTE data[])
 		c = b;
 		b = a;
 		a = t1 + t2;
+		//if ( i == temp) {
+			//printf("i = %d\n", i);
+			//printf("h = %32X\n", h);
+			//printf("g = %32X\n", g);
+			//printf("f = %32X\n", f);
+			//printf("e = %32X\n", e);
+			//printf("d = %32X\n", d);
+			//printf("c = %32X\n", c);
+			//printf("b = %32X\n", b);
+			//printf("a = %32X\n\n", a);
+		//}
+		//if (i == temp+1) {
+			//printf("para i = %d\n", i);
+			//printf("temp1 = %32X\n", t1);
+			//printf("temp2 = %32X\n", t2);
+		//}
 	}
 
 	ctx->state[0] += a;
@@ -155,4 +195,77 @@ void sha256_final(SHA256_CTX *ctx, BYTE hash[])
 		hash[i + 24] = (ctx->state[6] >> (24 - i * 8)) & 0x000000ff;
 		hash[i + 28] = (ctx->state[7] >> (24 - i * 8)) & 0x000000ff;
 	}
+}
+
+/**###  SHA256-TESTE.C ###**/
+
+/*********************** FUNCTION DEFINITIONS ***********************/
+int sha256_test()
+{
+//	BYTE text1[] = {"abc"};
+	BYTE text1[] = {"abcdefg"};
+//	BYTE text1[] = {"AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMM"};
+//	BYTE text2[] = {"abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"};
+//	BYTE text3[] = {"aaaaaaaaaa"};
+	BYTE hash1[SHA256_BLOCK_SIZE] = {0xba,0x78,0x16,0xbf,0x8f,0x01,0xcf,0xea,0x41,0x41,0x40,0xde,0x5d,0xae,0x22,0x23,
+	                                 0xb0,0x03,0x61,0xa3,0x96,0x17,0x7a,0x9c,0xb4,0x10,0xff,0x61,0xf2,0x00,0x15,0xad};
+//	BYTE hash2[SHA256_BLOCK_SIZE] = {0x24,0x8d,0x6a,0x61,0xd2,0x06,0x38,0xb8,0xe5,0xc0,0x26,0x93,0x0c,0x3e,0x60,0x39,
+//	                                 0xa3,0x3c,0xe4,0x59,0x64,0xff,0x21,0x67,0xf6,0xec,0xed,0xd4,0x19,0xdb,0x06,0xc1};
+//	BYTE hash3[SHA256_BLOCK_SIZE] = {0xcd,0xc7,0x6e,0x5c,0x99,0x14,0xfb,0x92,0x81,0xa1,0xc7,0xe2,0x84,0xd7,0x3e,0x67,
+//	                                 0xf1,0x80,0x9a,0x48,0xa4,0x97,0x20,0x0e,0x04,0x6d,0x39,0xcc,0xc7,0x11,0x2c,0xd0};
+	BYTE buf[SHA256_BLOCK_SIZE];
+	SHA256_CTX ctx;
+	int idx;
+	int pass = 1;
+
+	sha256_init(&ctx);
+	sha256_update(&ctx, text1, strlen(text1));
+	sha256_final(&ctx, buf);
+	pass = pass && !memcmp(hash1, buf, SHA256_BLOCK_SIZE);
+	//Comentado em 10/05/2024 para validar o tempo clock
+	//printf("pass = %d \n", pass);
+	//printf("text1 is %s\n", text1);
+	//printf("hash1 is %256X\n", buf);
+/*
+	sha256_init(&ctx);
+	sha256_update(&ctx, text2, strlen(text2));
+	sha256_final(&ctx, buf);
+	pass = pass && !memcmp(hash2, buf, SHA256_BLOCK_SIZE);
+	
+	
+	sha256_init(&ctx);
+	for (idx = 0; idx < 100000; ++idx)
+	   sha256_update(&ctx, text3, strlen(text3));
+	sha256_final(&ctx, buf);
+	pass = pass && !memcmp(hash3, buf, SHA256_BLOCK_SIZE);
+*/
+	return(pass);
+}
+
+int main()
+{
+	double time1, timedif;
+    int success_count = 0;
+
+	time1 = (double) clock();
+	time1 = time1 / CLOCKS_PER_SEC;
+
+
+    for (int i = 0; i < 1000000; ++i)
+    {
+        if (sha256_test())
+        {
+            success_count++;
+        }
+    }
+
+    // printf("SHA-256 tests: %s\n", (success_count == 1000000) ? "SUCCEEDED" : "FAILED");
+
+	timedif = ( ((double) clock()) / CLOCKS_PER_SEC) - time1;
+    printf("The elapsed time is %f seconds\n", timedif);
+
+	//printf("SHA256 for abc is %s\n", hash1);
+	//printf("SHA-256 tests: %s\n", sha256_test() ? "SUCCEEDED" : "FAILED");
+
+	return(0);
 }
