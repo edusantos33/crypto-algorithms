@@ -54,8 +54,6 @@ void sha256_transform(SHA256_CTX *ctx, const BYTE data[])
 	
 	for (i = 0, j = 0; i < 16; ++i, j += 4){
 		m[i] = (data[j] << 24) | (data[j + 1] << 16) | (data[j + 2] << 8) | (data[j + 3]);
-		//printf("m[%d] = %32X \n", i,m[i]);
-		//printf("k[%d] = %u \n", i,k[i]);
 		if (i == temp+1) {
 			printf("m[%d] = %32X \n", i,m[i]);
 			printf("k[%d] = %u \n", i,k[i]);
@@ -64,14 +62,6 @@ void sha256_transform(SHA256_CTX *ctx, const BYTE data[])
 	}	
 	for ( ; i < 64; ++i) {
 		m[i] = SIG1(m[i - 2]) + m[i - 7] + SIG0(m[i - 15]) + m[i - 16];
-		//printf("m[%d] = %s \n", i,m[i]);
-		//printf("m[%d] = %32X \n", i,m[i]);
-		//printf("k[%d] = %u \n", i,k[i]);
-		//if (i == temp+1) {
-			//printf("m[%d] = %32X \n", i,m[i]);
-			//printf("k[%d] = %u \n", i,k[i]);
-			
-		//}
 	}	
 
 	a = ctx->state[0];
@@ -94,22 +84,6 @@ void sha256_transform(SHA256_CTX *ctx, const BYTE data[])
 		c = b;
 		b = a;
 		a = t1 + t2;
-		//if ( i == temp) {
-			//printf("i = %d\n", i);
-			//printf("h = %32X\n", h);
-			//printf("g = %32X\n", g);
-			//printf("f = %32X\n", f);
-			//printf("e = %32X\n", e);
-			//printf("d = %32X\n", d);
-			//printf("c = %32X\n", c);
-			//printf("b = %32X\n", b);
-			//printf("a = %32X\n\n", a);
-		//}
-		//if (i == temp+1) {
-			//printf("para i = %d\n", i);
-			//printf("temp1 = %32X\n", t1);
-			//printf("temp2 = %32X\n", t2);
-		//}
 	}
 
 	ctx->state[0] += a;
@@ -222,34 +196,16 @@ int sha256_test()
 	sha256_update(&ctx, text1, strlen(text1));
 	sha256_final(&ctx, buf);
 	pass = pass && !memcmp(hash1, buf, SHA256_BLOCK_SIZE);
-	//Comentado em 10/05/2024 para validar o tempo clock
-	//printf("pass = %d \n", pass);
-	//printf("text1 is %s\n", text1);
-	//printf("hash1 is %256X\n", buf);
-/*
-	sha256_init(&ctx);
-	sha256_update(&ctx, text2, strlen(text2));
-	sha256_final(&ctx, buf);
-	pass = pass && !memcmp(hash2, buf, SHA256_BLOCK_SIZE);
-	
-	
-	sha256_init(&ctx);
-	for (idx = 0; idx < 100000; ++idx)
-	   sha256_update(&ctx, text3, strlen(text3));
-	sha256_final(&ctx, buf);
-	pass = pass && !memcmp(hash3, buf, SHA256_BLOCK_SIZE);
-*/
 	return(pass);
 }
 
 int main()
 {
-	double time1, timedif;
+    double time1, timedif;
     int success_count = 0;
 
-	time1 = (double) clock();
-	time1 = time1 / CLOCKS_PER_SEC;
-
+    time1 = (double) clock();
+    time1 = time1 / CLOCKS_PER_SEC;
 
     for (int i = 0; i < 1000000; ++i)
     {
@@ -261,11 +217,8 @@ int main()
 
     // printf("SHA-256 tests: %s\n", (success_count == 1000000) ? "SUCCEEDED" : "FAILED");
 
-	timedif = ( ((double) clock()) / CLOCKS_PER_SEC) - time1;
+    timedif = ( ((double) clock()) / CLOCKS_PER_SEC) - time1;
     printf("The elapsed time is %f seconds\n", timedif);
-
-	//printf("SHA256 for abc is %s\n", hash1);
-	//printf("SHA-256 tests: %s\n", sha256_test() ? "SUCCEEDED" : "FAILED");
 
 	return(0);
 }
